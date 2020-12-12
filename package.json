@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Node.js controller",
   "main": "dist/main.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/main.d.ts",
   "dependencies": {},
   "devDependencies": {
     "@types/jest": "^26.0.19",
