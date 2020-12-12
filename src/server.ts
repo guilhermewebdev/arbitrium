@@ -2,7 +2,7 @@ import http from 'http';
 import http2 from 'http2';
 import https from 'https';
 
-export default class {
+export default class Server {
     private _useHttps: boolean;
     private _useHttp2: boolean;
     private _server: http.Server | http2.Http2Server | https.Server;

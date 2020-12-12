@@ -1,6 +1,6 @@
 import http from 'http';
 
-export default class {
+export default class Route {
     private _path: string;
     private _view: http.RequestListener;
     private _method: string;

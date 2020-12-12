@@ -1,10 +1,10 @@
-const Router = require('./router');
-const Route = require('./route');
+import Router from './router';
+import Route from './route';
 
 describe('Test the router class', () => {
     test('Instance router class', () => {
-        const router = Router([
-            Route('/', console.log)
+        const router = new Router([
+            new Route('/', console.log)
         ])
     })
 })

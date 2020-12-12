@@ -1,6 +1,6 @@
 import Route from './route';
 
-export default class {
+export default class Router {
     private _routes: Array<Route>;
 
     constructor(routes: Array<Route>){
