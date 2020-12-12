@@ -1,0 +1,26 @@
+{
+  "name": "arbitrium",
+  "version": "1.0.0",
+  "description": "Node.js controller",
+  "main": "main.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guilhermewebdev/arbitrium.git"
+  },
+  "keywords": [
+    "controller",
+    "node.js",
+    "server"
+  ],
+  "author": "Guilherme Isaias Silva",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/guilhermewebdev/arbitrium/issues"
+  },
+  "homepage": "https://github.com/guilhermewebdev/arbitrium#readme"
+}
