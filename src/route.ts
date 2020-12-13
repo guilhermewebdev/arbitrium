@@ -11,10 +11,10 @@ class TYPES {
 
 const types = new TYPES()
 
-class Path {
+export class Path {
     public readonly isRegex: boolean;
     public readonly path: string;
-    public readonly type?: keyof TYPES;
+    public readonly _type?: keyof TYPES;
     public readonly variable?: string;
 
     constructor(path: string) {
@@ -22,8 +22,13 @@ class Path {
         this.path = path;
         if (this.isRegex) {
             this.variable = this.getVariable(path);
-            this.type = this.getType(path);
+            this._type = this.getType(path);
         }
+    }
+
+    get type(){
+        if (this._type) return types[this._type];
+        return (value: any) => value; 
     }
 
     private getVariable(path: string): string {
@@ -37,21 +42,26 @@ class Path {
     }
 
     public check(path: string): boolean {
-        const typeMatch = (this.isRegex && (!!this.type && !!types[this.type](path)));
+        const typeMatch = (this.isRegex && !!this.type(path));
         return typeMatch || path === this.path;
     }
 
     public getValue(path: string) {
-        if (this.type) return types[this.type](path);
+        return this.type(path);
     }
 }
+
+const filterPath = (item: string, index: number, array: string[]): boolean => !!item; 
 
 export default class Route {
     private _path: Path[];
     private _view: RequestListener;
 
     constructor(path: string, view: RequestListener) {
-        this._path = path.split('/').map(item => new Path(item));
+        this._path = path.split('/')
+            .filter(filterPath)
+            .map(item => new Path(item));
+        this._path.unshift(new Path(''));
         this._view = view;
     }
 
@@ -59,16 +69,18 @@ export default class Route {
     get view() { return this._view; }
 
     public match(path: string): boolean {
-        const arrayPath = path.split('/');
+        const arrayPath = path.split('/').filter(filterPath);
+        arrayPath.unshift('');
         if (arrayPath.length !== this._path.length) return false;
         return arrayPath.length === arrayPath.filter((value, index) => {
             return this._path[index].check(value);
         }).length;
     }
 
-    private getArgs(url: string) {
+    public getArgs(url: string) {
         const args = {};
-        const urlArray = url.split('/');
+        const urlArray = url.split('/')
+            .filter(item => !!item);
         this._path
             .filter(path => path.isRegex)
             .forEach((path, index) => {
