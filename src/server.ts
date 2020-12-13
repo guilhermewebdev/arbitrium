@@ -1,12 +1,5 @@
-import http from 'http';
-import http2 from 'http2';
-import https from 'https';
-import Router from './router';
-
-export type ServerResponse = http.ServerResponse | http2.Http2ServerResponse;
-export type ServerRequest = http2.Http2ServerRequest | http.IncomingMessage;
-export type HttpServer = http.Server | http2.Http2Server | http2.Http2SecureServer | https.Server;
-export type RequestListener = (request: ServerRequest, response: ServerResponse) => void;
+import { serve, Server as DenoServer, ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
+import Router from './router.ts';
 
 export interface ServerConfig {
     router: Router;
@@ -18,15 +11,19 @@ export interface ServerConfig {
     key?: string;
 }
 
+export interface RequestListener {
+    (request: ServerRequest, args: {}): void;
+}
+
 export default class Server {
     private _useHttps: boolean;
     private _useHttp2: boolean;
-    private _server: HttpServer;
+    private _server: DenoServer;
     private _port: number;
     private _host: string;
     private _router: Router;
-    private _key: string | undefined;
-    private _cert: string | undefined;
+    private _key?: string;
+    private _cert?: string;
 
     constructor(config: ServerConfig) {
         const { router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false, key, cert } = config;
@@ -40,7 +37,7 @@ export default class Server {
         }
         this._key = key;
         this._cert = cert;
-        this._server = this.createServer();
+        this._server = serve({ port, hostname: host });
     }
 
     get port() { return this._port; }
@@ -49,27 +46,18 @@ export default class Server {
 
     get server() { return this._server; }
 
-    private async handleRequest(request: ServerRequest, response: ServerResponse) {
-        this._router.handleRequest(request, response);
+    private handleRequest(request: ServerRequest) {
+        return this._router.handleRequest(request);
     }
 
-    private createServer() {
-        if (this._useHttp2) {
-            if (this._useHttps) this._server = http2.createSecureServer(this.handleRequest)
-            else this._server = http2.createServer(this.handleRequest)
-        } else {
-            if (this._useHttps) this._server = https.createServer(this.handleRequest)
-            else this._server = http.createServer(this.handleRequest)
-        }
-        return this._server;
-    }
 
     public listen(callback: () => void | undefined) {
-        this._server.listen(
-            this._port,
-            this._host,
-            callback,
-        );
-        return this;
+        for await (const request of this._server) {
+            this.handleRequest(request);
+        }
     }
+}
+
+export const serverFactory = (config: ServerConfig) => {
+    return new Server(config);
 }

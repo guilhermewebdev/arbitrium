@@ -1,6 +1,7 @@
-import Route from './route';
-import Server, { ServerRequest, ServerResponse } from './server';
-import { URL } from 'url';
+import Route from './route.ts';
+import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
+import { RequestListener } from './server.ts';
+
 
 export default class Router {
     private _routes: Array<Route>;
@@ -17,13 +18,17 @@ export default class Router {
         return this._routes.find(route => route.match(path)) || this._defaultRoute;
     }
 
-    public async handleRequest(request: ServerRequest, response: ServerResponse) {
+    public handleRequest(request: ServerRequest) {
         const url = new URL(request.url || '');
         const route = this.findRoute(url.pathname);
         try{
-            route.run(request, response);
+            route.run(request);
         }catch(error){
-            this._defaultRoute.run(request, response);
+            this._defaultRoute.run(request);
         }
     }
+}
+
+export const routerFactory = (routes: Route[]) => {
+    return new Router(routes);
 }

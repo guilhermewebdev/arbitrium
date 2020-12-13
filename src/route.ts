@@ -1,4 +1,5 @@
-import { RequestListener, ServerRequest, ServerResponse } from './server';
+import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
+import { RequestListener } from './server.ts';
 
 const URL_REGEX = /^\<[A-z]{1,}\:(number|str)\>$/g
 
@@ -42,16 +43,11 @@ class Path {
     public getValue(path: string) {
         if (this.type) return types[this.type](path);
     }
-
-}
-
-interface View {
-    (request: ServerRequest, response: ServerResponse, args?: {}): void;
 }
 
 export default class Route {
     private _path: Path[];
-    private _view: View;
+    private _view: RequestListener;
 
     constructor(path: string, view: RequestListener) {
         this._path = path.split('/').map(item => new Path(item));
@@ -84,9 +80,9 @@ export default class Route {
         return args;
     }
 
-    public async run(request: ServerRequest, response: ServerResponse) {
+    public run(request: ServerRequest) {
         const url = new URL(request.url || '');
-        return this._view(request, response, this.getArgs(url.pathname))
+        return this._view(request, this.getArgs(url.pathname))
     }
 
 }
