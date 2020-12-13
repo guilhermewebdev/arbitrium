@@ -37,7 +37,8 @@ class Path {
     }
 
     public check(path: string): boolean {
-        return this.isRegex || path === this.path
+        const typeMatch = (this.isRegex && (!!this.type && !!types[this.type](path)));
+        return typeMatch || path === this.path;
     }
 
     public getValue(path: string) {
