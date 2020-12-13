@@ -1,18 +1,30 @@
 import http from 'http';
 import http2 from 'http2';
 import https from 'https';
+import Router from './router';
 
-type ServerResponse = http.ServerResponse | http2.Http2ServerResponse;
-type ServerRequest = http2.Http2ServerRequest | http.ClientRequest | http.IncomingMessage;
+export type ServerResponse = http.ServerResponse | http2.Http2ServerResponse;
+export type ServerRequest = http2.Http2ServerRequest | http.ClientRequest | http.IncomingMessage;
+export type HttpServer = http.Server | http2.Http2Server | https.Server;
+
+export interface ServerConfig {
+    router: Router;
+    port?: number;
+    host?: string;
+    useHttps?: boolean;
+    useHttp2?: boolean;
+}
 
 export default class Server {
     private _useHttps: boolean;
     private _useHttp2: boolean;
-    private _server: http.Server | http2.Http2Server | https.Server;
+    private _server: HttpServer;
     private _port: number;
     private _host: string;
+    private _router: Router;
 
-    constructor(port: number = 8080, host: string = 'localhost', useHttps: boolean = false, useHttp2: boolean = false) {
+    constructor({ router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false }: ServerConfig) {
+        this._router = router;
         this._useHttp2 = useHttp2;
         this._useHttps = useHttps;
         this._port = port;
@@ -23,14 +35,14 @@ export default class Server {
     get port() { return this._port; }
 
     get host() { return this._host; }
-    
+
     get server() { return this._server; }
 
-    private handleRequest(req: ServerRequest, res: ServerResponse) {
-        
+    private async handleRequest(request: ServerRequest, response: ServerResponse) {
+        this._router.handleRequest(request, response);
     }
 
-    private createServer(){
+    private createServer() {
         if (this._useHttp2) {
             if (this._useHttps) this._server = http2.createSecureServer(this.handleRequest)
             else this._server = http2.createServer(this.handleRequest)
