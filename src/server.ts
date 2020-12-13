@@ -14,6 +14,8 @@ export interface ServerConfig {
     host?: string;
     useHttps?: boolean;
     useHttp2?: boolean;
+    cert?: string;
+    key?: string;
 }
 
 export default class Server {
@@ -23,13 +25,21 @@ export default class Server {
     private _port: number;
     private _host: string;
     private _router: Router;
+    private _key: string | undefined;
+    private _cert: string | undefined;
 
-    constructor({ router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false }: ServerConfig) {
+    constructor(config: ServerConfig) {
+        const { router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false, key, cert } = config;
         this._router = router;
         this._useHttp2 = useHttp2;
         this._useHttps = useHttps;
         this._port = port;
         this._host = host;
+        if(useHttps && !('key' in config && 'cert' in config)){
+            throw new Error('ERROR: If you want use SSL, you should inform the certified and key path')
+        }
+        this._key = key;
+        this._cert = cert;
         this._server = this.createServer();
     }
 

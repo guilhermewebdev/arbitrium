@@ -8,7 +8,7 @@ export default class Router {
 
     constructor(routes: Array<Route>, defaultRoute?: Route) {
         this._routes = routes;
-        this._defaultRoute = defaultRoute || new Route('', () => { })
+        this._defaultRoute = defaultRoute || new Route('', () => { });
     }
 
     get routes() { return this._routes; }
@@ -20,5 +20,10 @@ export default class Router {
     public async handleRequest(request: ServerRequest, response: ServerResponse) {
         const url = new URL(request.url || '');
         const route = this.findRoute(url.pathname);
+        try{
+            route.run(request, response);
+        }catch(error){
+            this._defaultRoute.run(request, response);
+        }
     }
 }
