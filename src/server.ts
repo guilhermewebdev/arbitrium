@@ -4,8 +4,9 @@ import https from 'https';
 import Router from './router';
 
 export type ServerResponse = http.ServerResponse | http2.Http2ServerResponse;
-export type ServerRequest = http2.Http2ServerRequest | https. | http.IncomingMessage;
-export type HttpServer = http.Server | http2.Http2Server | https.Server;
+export type ServerRequest = http2.Http2ServerRequest | http.IncomingMessage;
+export type HttpServer = http.Server | http2.Http2Server | http2.Http2SecureServer | https.Server;
+export type RequestListener = (request: ServerRequest, response: ServerResponse) => void;
 
 export interface ServerConfig {
     router: Router;

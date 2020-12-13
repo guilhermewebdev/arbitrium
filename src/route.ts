@@ -1,11 +1,10 @@
-import http from 'http';
-import Server from './server';
+import { RequestListener, ServerResponse } from './server';
 
 export default class Route {
     private _path: string;
-    private _view: http.RequestListener;
+    private _view: RequestListener;
 
-    constructor(path: string, view: http.RequestListener) {
+    constructor(path: string, view: RequestListener) {
         this._path = path;
         this._view = view;
     }
@@ -13,8 +12,12 @@ export default class Route {
     get path() { return this._path; }
     get view() { return this._view; }
 
+    public match(path: string): boolean {
+        return false;
+    }
+
 }
 
-export const route = (path: string, view: http.RequestListener) => {
+export const route = (path: string, view: RequestListener): Route => {
     return new Route(path, view);
 }
