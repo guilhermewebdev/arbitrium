@@ -19,7 +19,6 @@ export default class Route {
 
 }
 
-
 export const route = (path: string, view: http.RequestListener, method = 'use') => {
     return new Route(path, view, method);
 }

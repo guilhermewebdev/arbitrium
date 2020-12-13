@@ -2,6 +2,9 @@ import http from 'http';
 import http2 from 'http2';
 import https from 'https';
 
+type ServerResponse = http.ServerResponse | http2.Http2ServerResponse;
+type ServerRequest = http2.Http2ServerRequest | http.ClientRequest | http.IncomingMessage;
+
 export default class Server {
     private _useHttps: boolean;
     private _useHttp2: boolean;
@@ -23,13 +26,17 @@ export default class Server {
     
     get server() { return this._server; }
 
+    private handleRequest(req: ServerRequest, res: ServerResponse) {
+        
+    }
+
     private createServer(){
         if (this._useHttp2) {
-            if (this._useHttps) this._server = http2.createSecureServer()
-            else this._server = http2.createServer()
+            if (this._useHttps) this._server = http2.createSecureServer(this.handleRequest)
+            else this._server = http2.createServer(this.handleRequest)
         } else {
-            if (this._useHttps) this._server = https.createServer()
-            else this._server = http.createServer()
+            if (this._useHttps) this._server = https.createServer(this.handleRequest)
+            else this._server = http.createServer(this.handleRequest)
         }
         return this._server;
     }
