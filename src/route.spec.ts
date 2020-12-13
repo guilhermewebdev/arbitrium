@@ -38,4 +38,16 @@ Deno.test('Parsing path to array', () => {
     const array1 = Route.pathToArray('/fa/34/fd')
     assertArrayIncludes(array1, ['', 'fa', '34', 'fd'])
     assertEquals(array1.length, 4, 'Array length')
+    const array2 = Route.pathToArray('');
+    assertArrayIncludes(array2, [''])
+    assertEquals(array2.length, 1, 'Array length')
+    const array3 = Route.pathToArray('/');
+    assertArrayIncludes(array3, [''])
+    assertEquals(array3.length, 1, 'Array length')
+    const array4 = Route.pathToArray('deno');
+    assertArrayIncludes(array4, ['', 'deno'])
+    assertEquals(array4.length, 2, 'Array length')
+    const array5 = Route.pathToArray('deno/');
+    assertArrayIncludes(array5, ['', 'deno'])
+    assertEquals(array5.length, 2, 'Array length')
 })
