@@ -46,12 +46,11 @@ export default class Server {
 
     get server() { return this._server; }
 
-    private handleRequest(request: ServerRequest) {
+    private async handleRequest(request: ServerRequest) {
         return this._router.handleRequest(request);
     }
 
-
-    public listen(callback: () => void | undefined) {
+    public async listen() {
         for await (const request of this._server) {
             this.handleRequest(request);
         }

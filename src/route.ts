@@ -60,9 +60,9 @@ export default class Route {
     public match(path: string): boolean {
         const arrayPath = path.split('/');
         if (arrayPath.length !== this._path.length) return false;
-        return arrayPath === arrayPath.filter((value, index) => {
+        return arrayPath.length === arrayPath.filter((value, index) => {
             return this._path[index].check(value);
-        })
+        }).length;
     }
 
     private getArgs(url: string) {

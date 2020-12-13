@@ -2,7 +2,6 @@ import Route from './route.ts';
 import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
 import { RequestListener } from './server.ts';
 
-
 export default class Router {
     private _routes: Array<Route>;
     private _defaultRoute: Route;
