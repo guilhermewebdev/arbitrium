@@ -51,26 +51,27 @@ export class Path {
     }
 }
 
-const filterPath = (item: string, index: number, array: string[]): boolean => !!item; 
-
 export default class Route {
     private _path: Path[];
     private _view: RequestListener;
 
     constructor(path: string, view: RequestListener) {
-        this._path = path.split('/')
-            .filter(filterPath)
-            .map(item => new Path(item));
-        this._path.unshift(new Path(''));
+        this._path = Route.pathToArray(path).map(item => new Path(item));;
         this._view = view;
     }
 
     get path() { return this._path; }
     get view() { return this._view; }
 
+    static pathToArray(path: string){
+        const newPath = path.split('/')
+            .filter(item => !!item)
+        newPath.unshift('');
+        return newPath;
+    }
+
     public match(path: string): boolean {
-        const arrayPath = path.split('/').filter(filterPath);
-        arrayPath.unshift('');
+        const arrayPath = Route.pathToArray(path)
         if (arrayPath.length !== this._path.length) return false;
         return arrayPath.length === arrayPath.filter((value, index) => {
             return this._path[index].check(value);
@@ -84,11 +85,10 @@ export default class Route {
         this._path
             .filter(path => path.isRegex)
             .forEach((path, index) => {
-                if(path.variable){
-                    Object.assign(args, {
-                        [path.variable]: path.getValue(urlArray[index])
-                    })
-                }
+                Object.assign(args, {
+                    // @ts-ignore
+                    [path.variable]: path.getValue(urlArray[index])
+                })
             })
         return args;
     }

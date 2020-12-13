@@ -1,6 +1,6 @@
 import { ServerRequest } from "https://deno.land/std@0.80.0/http/server.ts";
 import Route, { Path } from './route.ts';
-import { assertEquals } from "https://deno.land/std@0.80.0/testing/asserts.ts";
+import { assertArrayIncludes, assertEquals } from "https://deno.land/std@0.80.0/testing/asserts.ts";
 
 const view = (request: ServerRequest, args: any) => {}
 
@@ -24,4 +24,18 @@ Deno.test('Number param', () => {
     assertEquals(user.match('/54'), true, "54 at param");
     assertEquals(user.match('/faf'), false, "String at number param");
     assertEquals(user.getArgs('/45'), { user: 45 });
+})
+
+Deno.test('Multiple params', () => {
+    const resource = new Route('/<user:number>/<address:str>/', view);
+    assertEquals(resource.path.length, 3, "Resource path length")
+    assertEquals(resource.match('/54'), false, "54 at param");
+    assertEquals(resource.match('/54/du/'), true, "54 and du at param");
+    assertEquals(resource.getArgs('/54/du/'), { user: 54, address: 'du' }, 'getArgs test')
+})
+
+Deno.test('Parsing path to array', () => {
+    const array1 = Route.pathToArray('/fa/34/fd')
+    assertArrayIncludes(array1, ['', 'fa', '34', 'fd'])
+    assertEquals(array1.length, 4, 'Array length')
 })
