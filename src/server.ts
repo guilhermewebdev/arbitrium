@@ -1,4 +1,4 @@
-import { serve, Server as DenoServer, ServerRequest, Response } from 'https://deno.land/std@0.80.0/http/server.ts';
+import { serve, Server as DenoServer, ServerRequest, Response as DenoResponse } from 'https://deno.land/std@0.80.0/http/server.ts';
 import Router from './router.ts';
 
 export interface RequestListener {
@@ -20,6 +20,18 @@ export interface ServerConfig {
     key?: string;
 }
 
+export class Response implements DenoResponse {
+    status?: number;
+    headers?: Headers;
+    body?: Uint8Array | Deno.Reader | string;
+    trailers?: () => Promise<Headers> | Headers;
+
+    constructor(body='', status=200, headers?: Headers){
+        this.body = body;
+        this.status = status;
+        this.headers = headers;
+    }
+}
 
 export default class Server {
     private _useHttps: boolean;

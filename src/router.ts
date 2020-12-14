@@ -1,6 +1,10 @@
 import Route from './route.ts';
 import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
-import { RequestListener } from './server.ts';
+import { RequestListener, Response } from './server.ts';
+
+const view404: RequestListener = async (request, args) => {
+    return new Response('404 - Page not found' )
+}
 
 export default class Router {
     private _routes: Array<Route>;
@@ -8,7 +12,7 @@ export default class Router {
 
     constructor(routes: Array<Route>, defaultRoute?: Route) {
         this._routes = routes;
-        this._defaultRoute = defaultRoute || new Route('', () => { });
+        this._defaultRoute = defaultRoute || new Route('', view404);
     }
 
     get routes() { return this._routes; }

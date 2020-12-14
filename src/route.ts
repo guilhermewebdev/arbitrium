@@ -1,5 +1,5 @@
 import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
-import { RequestListener } from './server.ts';
+import { RequestListener, Response } from './server.ts';
 
 const URL_REGEX = /^\<([A-z]{1,})\:(number|str)\>$/g
 

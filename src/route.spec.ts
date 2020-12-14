@@ -2,7 +2,7 @@ import { ServerRequest } from "https://deno.land/std@0.80.0/http/server.ts";
 import Route, { Path } from './route.ts';
 import { assertArrayIncludes, assertEquals } from "https://deno.land/std@0.80.0/testing/asserts.ts";
 
-const view = async (request: ServerRequest, args: any) => { return new Response()}
+const view = async (request: ServerRequest, args: any) => { return new Response() }
 
 Deno.test('Number path', () => {
     const path = new Path('<user:number>');
