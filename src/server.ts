@@ -81,7 +81,7 @@ export default class Server {
         this._key = key;
         this._cert = cert;
         this._server = this.createServer();
-        this._responder = this.iterateMiddlewares(this.toRouter);
+        this._responder = this.iterateMiddlewares();
     }
 
     get port() { return this._port; }
@@ -104,11 +104,10 @@ export default class Server {
         return this._router.handleRequest(request)
     }
 
-    private iterateMiddlewares(getResponse: RequestListener, index=0): RequestListener {
-        if (this._middlewares.length <= index) return getResponse;
-        const builder = this._middlewares[index];
-        const middleware = builder(getResponse);
-        return this.iterateMiddlewares(middleware, index + 1);
+    private iterateMiddlewares(): RequestListener {
+        return this._middlewares.reduce((previous, current) => {
+            return current(previous)
+        }, this.toRouter)
     }
 
     private async handleRequest(request: ServerRequest) {
@@ -150,7 +149,7 @@ export default class Server {
 
     public addMiddleware(middleware: Middleware){
         const index = this._middlewares.push(middleware);
-        this._responder = this.iterateMiddlewares(this.toRouter);
+        this._responder = this.iterateMiddlewares();
         return index;
     }
 

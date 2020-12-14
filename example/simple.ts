@@ -38,6 +38,6 @@ const router = new Router([
 // To create a server, is just instance the "Server" class with configs
 const server = new Server({ router, middlewares: [middleware] });
 
-// To start server is just call the ".listen()" server method
+// To start server is just call the ".listen()" Server method
 server.listen()
 
