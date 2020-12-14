@@ -71,7 +71,7 @@ export default class Server {
     constructor(config: ServerConfig) {
         const { router, port = 8080, host = 'localhost', useHttps = false, middlewares = [], key, cert } = config;
         if(useHttps && !('key' in config && 'cert' in config)){
-            throw new Error('ERROR: If you want use SSL, you should inform the certified and key path')
+            throw new Error('[ERROR]: If you want use SSL, you should inform the certified and key path')
         }
         this._router = router;
         this._middlewares = middlewares;
@@ -81,8 +81,7 @@ export default class Server {
         this._key = key;
         this._cert = cert;
         this._server = this.createServer();
-        const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest);
-        this._responder = this.iterateMiddlewares(toRouter);
+        this._responder = this.iterateMiddlewares(this.toRouter);
     }
 
     get port() { return this._port; }
@@ -92,13 +91,17 @@ export default class Server {
     get server() { return this._server; }
 
     get url() {
-        return `http${this._useHttps ? 's' : ''}://${this.host}:${this.port}/`
+        return `http${this._useHttps ? 's' : ''}://${this.host}:${this.port}`
     }
 
     private createServer(){
         const config = { port: this.port, hostname: this.host }
         // @ts-ignore
         return this._useHttps ? serveTLS({ ...config, certFile: this._cert,  keyFile: this._key }) : serve(config);
+    }
+
+    private toRouter = (request: ServerRequest) => {
+        return this._router.handleRequest(request)
     }
 
     private iterateMiddlewares(getResponse: RequestListener, index=0): RequestListener {
@@ -119,6 +122,7 @@ export default class Server {
         }catch(error){
             const response = new Response(error.message, 500);
             request.respond(response);
+            request.finalize();
             console.log(`%c[ERROR]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`, 'color:red', 'color:default')
         }
     }
@@ -146,8 +150,7 @@ export default class Server {
 
     public addMiddleware(middleware: Middleware){
         const index = this._middlewares.push(middleware);
-        const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest);
-        this._responder = this.iterateMiddlewares(toRouter);
+        this._responder = this.iterateMiddlewares(this.toRouter);
         return index;
     }
 
