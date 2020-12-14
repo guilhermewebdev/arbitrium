@@ -3,7 +3,6 @@ import { RequestListener } from './server.ts';
 
 const URL_REGEX = /^\<([A-z]{1,})\:(number|str)\>$/g
 
-
 class TYPES {
     number = Number;
     str = String;

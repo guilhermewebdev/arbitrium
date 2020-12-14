@@ -17,13 +17,13 @@ export default class Router {
         return this._routes.find(route => route.match(path)) || this._defaultRoute;
     }
 
-    public handleRequest(request: ServerRequest) {
-        const url = new URL(request.url || '');
+    public async handleRequest(request: ServerRequest) {
+        const url = new URL(request.url);
         const route = this.findRoute(url.pathname);
         try{
-            route.run(request);
+            return route.run(request);
         }catch(error){
-            this._defaultRoute.run(request);
+            return this._defaultRoute.run(request);
         }
     }
 }

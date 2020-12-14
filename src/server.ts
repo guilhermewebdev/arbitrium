@@ -1,8 +1,17 @@
-import { serve, Server as DenoServer, ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
+import { serve, Server as DenoServer, ServerRequest, Response } from 'https://deno.land/std@0.80.0/http/server.ts';
 import Router from './router.ts';
+
+export interface RequestListener {
+    (request: ServerRequest, args?: {}): Promise<Response>;
+}
+
+export interface Middleware {
+    (getResponse: RequestListener): RequestListener;
+}
 
 export interface ServerConfig {
     router: Router;
+    middlewares?: Middleware[];
     port?: number;
     host?: string;
     useHttps?: boolean;
@@ -11,9 +20,6 @@ export interface ServerConfig {
     key?: string;
 }
 
-export interface RequestListener {
-    (request: ServerRequest, args: {}): void;
-}
 
 export default class Server {
     private _useHttps: boolean;
@@ -22,12 +28,14 @@ export default class Server {
     private _port: number;
     private _host: string;
     private _router: Router;
+    private _middlewares: Middleware[];
     private _key?: string;
     private _cert?: string;
 
     constructor(config: ServerConfig) {
-        const { router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false, key, cert } = config;
+        const { router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false, middlewares = [], key, cert } = config;
         this._router = router;
+        this._middlewares = middlewares;
         this._useHttp2 = useHttp2;
         this._useHttps = useHttps;
         this._port = port;
@@ -46,15 +54,34 @@ export default class Server {
 
     get server() { return this._server; }
 
+    private async iterateMiddlewares(getResponse: RequestListener, request: ServerRequest, index=0): Promise<Response>{
+        const builder = this._middlewares[index];
+        if(builder){
+            const middleware = builder(getResponse);
+            return this.iterateMiddlewares(middleware, request, index + 1);
+        }
+        return getResponse(request);
+    }
+
     private async handleRequest(request: ServerRequest) {
-        return this._router.handleRequest(request);
+        const response = await this.iterateMiddlewares(this._router.handleRequest, request);
+        request.respond(response);
     }
 
     public async listen() {
-        for await (const request of this._server) {
-            this.handleRequest(request);
+        try{
+            for await (const request of this._server) {
+                this.handleRequest(request);
+            }
+        }catch(error){
+            return error;
         }
     }
+
+    public stop(){
+        return this.server.close()
+    }
+
 }
 
 export const serverFactory = (config: ServerConfig) => {
