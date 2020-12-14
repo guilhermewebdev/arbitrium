@@ -132,7 +132,7 @@ export default class Server {
 
     public async listen() {
         this.startServer()
-        console.log(`%c[SERVER RUNNING]:%c ${this.url}`, 'color:#00F507', 'color:default')
+        console.log(`\n%c[SERVER RUNNING]:%c ${this.url}\n`, 'color:#00F507', 'color:default')
     }
     
     public stop(){
