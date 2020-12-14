@@ -91,13 +91,17 @@ export default class Server {
 
     get server() { return this._server; }
 
+    get url() {
+        return `http${this._useHttps ? 's' : ''}://${this.host}:${this.port}/`
+    }
+
     private createServer(){
         const config = { port: this.port, hostname: this.host }
         // @ts-ignore
         return this._useHttps ? serveTLS({ ...config, certFile: this._cert,  keyFile: this._key }) : serve(config);
     }
 
-    private iterateMiddlewares(getResponse: RequestListener, index=0): RequestListener{
+    private iterateMiddlewares(getResponse: RequestListener, index=0): RequestListener {
         if (this._middlewares.length >= index) return getResponse;
         const builder = this._middlewares[index];
         const middleware = builder(getResponse);
@@ -114,13 +118,13 @@ export default class Server {
         }
     }
     
-    private async startServer(){
-        
+    private async startServer(tries=0){
         try{
             for await (const request of this._server) {
                 this.handleRequest(request);
             }
         }catch(error){
+            if(tries < 5) this.startServer(tries + 1);
             return error;
         }
     }
@@ -130,10 +134,12 @@ export default class Server {
             .catch((error) => {
                 if(error) this.startServer()
             })
+        console.log(`%c[SERVER RUNNING]:%c ${this.url}`, 'color:#00F507', 'color:white')
     }
-
+    
     public stop(){
-        return this.server.close()
+        this.server.close()
+        console.log(`%c[SERVER STOPPED]`, 'color:red')
     }
 
     public addMiddleware(middleware: Middleware){
