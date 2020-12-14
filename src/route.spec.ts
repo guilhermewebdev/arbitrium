@@ -4,11 +4,18 @@ import { assertArrayIncludes, assertEquals } from "https://deno.land/std@0.80.0/
 
 const view = (request: ServerRequest, args: any) => {}
 
-Deno.test('Path', () => {
+Deno.test('Number path', () => {
     const path = new Path('<user:number>');
-    assertEquals(path.isRegex, true, 'It\'s not RegEx');
+    assertEquals(path.hasProp, true, 'Has not prop');
     assertEquals(path.check('43'), true, 'Check don\'t works');
     assertEquals(path.getValue('54'), 54, "getValue don't works");
+})
+
+Deno.test('String path', () => {
+    const path = new Path('<user:str>');
+    assertEquals(path.hasProp, true, 'Has no prop');
+    assertEquals(path.check('43'), true, 'Check don\'t works');
+    assertEquals(path.getValue('54'), '54', "getValue don't works");
 })
 
 Deno.test('Root', () => {
@@ -50,4 +57,7 @@ Deno.test('Parsing path to array', () => {
     const array5 = Route.pathToArray('deno/');
     assertArrayIncludes(array5, ['', 'deno'])
     assertEquals(array5.length, 2, 'Array length')
+    const array6 = Route.pathToArray('/54/du/');
+    assertArrayIncludes(array6, ['', '54', 'du'])
+    assertEquals(array6.length, 3, 'Array length')
 })

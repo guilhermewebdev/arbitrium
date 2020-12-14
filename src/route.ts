@@ -1,7 +1,7 @@
 import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
 import { RequestListener } from './server.ts';
 
-const URL_REGEX = /^\<[A-z]{1,}\:(number|str)\>$/g
+const URL_REGEX = /^\<([A-z]{1,})\:(number|str)\>$/g
 
 
 class TYPES {
@@ -12,15 +12,15 @@ class TYPES {
 const types = new TYPES()
 
 export class Path {
-    public readonly isRegex: boolean;
+    public readonly hasProp: boolean;
     public readonly path: string;
     public readonly _type?: keyof TYPES;
     public readonly variable?: string;
 
     constructor(path: string) {
-        this.isRegex = URL_REGEX.test(path);
+        this.hasProp =  /^\<([A-z]{1,})\:(number|str)\>$/g.test(path);
         this.path = path;
-        if (this.isRegex) {
+        if (this.hasProp) {
             this.variable = this.getVariable(path);
             this._type = this.getType(path);
         }
@@ -42,7 +42,7 @@ export class Path {
     }
 
     public check(path: string): boolean {
-        const typeMatch = (this.isRegex && !!this.type(path));
+        const typeMatch = (this.hasProp && !!this.type(path));
         return typeMatch || path === this.path;
     }
 
@@ -83,7 +83,7 @@ export default class Route {
         const urlArray = url.split('/')
             .filter(item => !!item);
         this._path
-            .filter(path => path.isRegex)
+            .filter(path => path.hasProp)
             .forEach((path, index) => {
                 Object.assign(args, {
                     // @ts-ignore
