@@ -111,6 +111,7 @@ export default class Server {
     private async handleRequest(request: ServerRequest) {
         try {
             const response = await this._responder(request);
+            console.log(`%c[REQUEST]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`, 'color:#00F507', 'color:default')
             request.respond(response);
             return request.finalize()
         }catch(error){
@@ -131,9 +132,6 @@ export default class Server {
 
     public async listen() {
         this.startServer()
-            .catch((error) => {
-                if(error) this.startServer()
-            })
         console.log(`%c[SERVER RUNNING]:%c ${this.url}`, 'color:#00F507', 'color:default')
     }
     
