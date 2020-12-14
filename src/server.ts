@@ -134,7 +134,7 @@ export default class Server {
             .catch((error) => {
                 if(error) this.startServer()
             })
-        console.log(`%c[SERVER RUNNING]:%c ${this.url}`, 'color:#00F507', 'color:white')
+        console.log(`%c[SERVER RUNNING]:%c ${this.url}`, 'color:#00F507', 'color:default')
     }
     
     public stop(){
