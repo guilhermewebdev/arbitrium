@@ -3,7 +3,7 @@ import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
 import { RequestListener, Response } from './server.ts';
 
 const view404: RequestListener = async (request, args) => {
-    return new Response('404 - Page not found' )
+    return new Response('404 - Page not found', 404)
 }
 
 export default class Router {
