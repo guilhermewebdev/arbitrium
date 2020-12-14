@@ -66,6 +66,7 @@ export default class Server {
     private _middlewares: Middleware[];
     private _key?: string;
     private _cert?: string;
+    private _responder: RequestListener;
 
     constructor(config: ServerConfig) {
         const { router, port = 8080, host = 'localhost', useHttps = false, middlewares = [], key, cert } = config;
@@ -79,7 +80,9 @@ export default class Server {
         this._host = host;
         this._key = key;
         this._cert = cert;
-        this._server = this.createServer()
+        this._server = this.createServer();
+        const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest);
+        this._responder = this.iterateMiddlewares(toRouter);
     }
 
     get port() { return this._port; }
@@ -94,25 +97,25 @@ export default class Server {
         return this._useHttps ? serveTLS({ ...config, certFile: this._cert,  keyFile: this._key }) : serve(config);
     }
 
-    private async iterateMiddlewares(getResponse: RequestListener, request: ServerRequest, index=0): Promise<Response>{
-        if (this._middlewares.length >= index) return getResponse(request);
+    private iterateMiddlewares(getResponse: RequestListener, index=0): RequestListener{
+        if (this._middlewares.length >= index) return getResponse;
         const builder = this._middlewares[index];
         const middleware = builder(getResponse);
-        return this.iterateMiddlewares(middleware, request, index + 1);
+        return this.iterateMiddlewares(middleware, index + 1);
     }
 
     private async handleRequest(request: ServerRequest) {
         try {
-            const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest)
-            const response = await this.iterateMiddlewares(toRouter, request);
+            const response = await this._responder(request);
             request.respond(response);
             return request.finalize()
         }catch(error){
             request.respond(new Response(error.message, 500))
         }
     }
-
+    
     private async startServer(){
+        
         try{
             for await (const request of this._server) {
                 this.handleRequest(request);
@@ -134,7 +137,10 @@ export default class Server {
     }
 
     public addMiddleware(middleware: Middleware){
-        return this._middlewares.push(middleware);
+        const index = this._middlewares.push(middleware);
+        const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest);
+        this._responder = this.iterateMiddlewares(toRouter);
+        return index;
     }
 
 }

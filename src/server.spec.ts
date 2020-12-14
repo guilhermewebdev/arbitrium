@@ -7,7 +7,7 @@ const view: RequestListener = async (request) => {
     const headers = new Headers([
         ['Content-Type', 'text/plain']
     ])
-    return new Response('Hello World', 200)
+    return new Response('Hello World', 200, headers)
 }
 
 Deno.test('Server', async () => {
