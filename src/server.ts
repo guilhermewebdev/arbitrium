@@ -102,7 +102,7 @@ export default class Server {
     }
 
     private iterateMiddlewares(getResponse: RequestListener, index=0): RequestListener {
-        if (this._middlewares.length >= index) return getResponse;
+        if (this._middlewares.length <= index) return getResponse;
         const builder = this._middlewares[index];
         const middleware = builder(getResponse);
         return this.iterateMiddlewares(middleware, index + 1);

@@ -16,7 +16,9 @@ async function viewWithParam(request: ServerRequest, args?: {}) {
 
 function middleware(getResponse: RequestListener) {
     // One-time configuration and initialization.
+    console.log('On start server')
     return async function(request: ServerRequest) {
+        console.log('On request')
         // Code to be executed for each request before
         // the view (and later middleware) are called.
         const response = getResponse(request);
