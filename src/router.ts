@@ -22,9 +22,8 @@ export default class Router {
     }
 
     public async handleRequest(request: ServerRequest) {
-        const url = new URL(request.url);
-        const route = this.findRoute(url.pathname);
         try{
+            const route = this.findRoute(request.url);
             return route.run(request);
         }catch(error){
             return this._defaultRoute.run(request);

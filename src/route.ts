@@ -93,8 +93,7 @@ export default class Route {
     }
 
     public run(request: ServerRequest) {
-        const url = new URL(request.url || '');
-        return this._view(request, this.getArgs(url.pathname))
+        return this._view(request, this.getArgs(request.url))
     }
 
 }

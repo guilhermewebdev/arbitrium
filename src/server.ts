@@ -1,4 +1,4 @@
-import { serve, Server as DenoServer, ServerRequest, Response as DenoResponse } from 'https://deno.land/std@0.80.0/http/server.ts';
+import { serve, Server as DenoServer, ServerRequest, Response as DenoResponse, serveTLS } from 'https://deno.land/std@0.80.0/http/server.ts';
 import Router from './router.ts';
 
 export interface RequestListener {
@@ -15,7 +15,6 @@ export interface ServerConfig {
     port?: number;
     host?: string;
     useHttps?: boolean;
-    useHttp2?: boolean;
     cert?: string;
     key?: string;
 }
@@ -35,7 +34,6 @@ export class Response implements DenoResponse {
 
 export default class Server {
     private _useHttps: boolean;
-    private _useHttp2: boolean;
     private _server: DenoServer;
     private _port: number;
     private _host: string;
@@ -45,19 +43,18 @@ export default class Server {
     private _cert?: string;
 
     constructor(config: ServerConfig) {
-        const { router, port = 8080, host = 'localhost', useHttp2 = false, useHttps = false, middlewares = [], key, cert } = config;
-        this._router = router;
-        this._middlewares = middlewares;
-        this._useHttp2 = useHttp2;
-        this._useHttps = useHttps;
-        this._port = port;
-        this._host = host;
+        const { router, port = 8080, host = 'localhost', useHttps = false, middlewares = [], key, cert } = config;
         if(useHttps && !('key' in config && 'cert' in config)){
             throw new Error('ERROR: If you want use SSL, you should inform the certified and key path')
         }
+        this._router = router;
+        this._middlewares = middlewares;
+        this._useHttps = useHttps;
+        this._port = port;
+        this._host = host;
         this._key = key;
         this._cert = cert;
-        this._server = serve({ port, hostname: host });
+        this._server = this.createServer()
     }
 
     get port() { return this._port; }
@@ -66,18 +63,24 @@ export default class Server {
 
     get server() { return this._server; }
 
+    private createServer(){
+        const config = { port: this.port, hostname: this.host }
+        // @ts-ignore
+        return this._useHttps ? serveTLS({ ...config, certFile: this._cert,  keyFile: this._key }) : serve(config);
+    }
+
     private async iterateMiddlewares(getResponse: RequestListener, request: ServerRequest, index=0): Promise<Response>{
+        if (this._middlewares.length >= index) return getResponse(request);
         const builder = this._middlewares[index];
-        if(builder){
-            const middleware = builder(getResponse);
-            return this.iterateMiddlewares(middleware, request, index + 1);
-        }
-        return getResponse(request);
+        const middleware = builder(getResponse);
+        return this.iterateMiddlewares(middleware, request, index + 1);
     }
 
     private async handleRequest(request: ServerRequest) {
-        const response = await this.iterateMiddlewares(this._router.handleRequest, request);
+        const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest)
+        const response = await this.iterateMiddlewares(toRouter, request);
         request.respond(response);
+        return request.finalize()
     }
 
     public async listen() {
@@ -92,6 +95,10 @@ export default class Server {
 
     public stop(){
         return this.server.close()
+    }
+
+    public addMiddleware(middleware: Middleware){
+        return this._middlewares.push(middleware);
     }
 
 }

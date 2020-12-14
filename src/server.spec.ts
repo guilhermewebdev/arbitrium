@@ -2,9 +2,13 @@ import Server, { RequestListener, Response } from './server.ts';
 import Router from './router.ts'
 import { route } from './route.ts';
 import { assertEquals } from "https://deno.land/std@0.80.0/testing/asserts.ts";
+import { bodyReader } from "https://deno.land/std@0.80.0/http/_io.ts";
 
 const view: RequestListener = async (request) => {
-    return new Response('Hello World')
+    const headers = new Headers([
+        ['Content-Type', 'text/plain']
+    ])
+    return new Response('Hello World', 200)
 }
 
 Deno.test('Server', async () => {
@@ -13,7 +17,10 @@ Deno.test('Server', async () => {
             route('/', view)
         ])
     })
-    await server.listen()
-    const response = await fetch('http://localhost:8080')
-    assertEquals(response.body, 'Hello World')
+    server.listen()
+    await fetch('http://localhost:8080')
+        .then(async (data) => {
+            assertEquals(await data.text(), 'Hello World')
+        })
+    server.stop()
 })
