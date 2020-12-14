@@ -19,17 +19,42 @@ export interface ServerConfig {
     key?: string;
 }
 
+const parses: any = {
+    object: function (value: Object) {
+        const string = JSON.stringify(value);
+        const json = JSON.parse(string);
+        return JSON.stringify(json);
+    },
+    default: function (value: any) {
+        return JSON.stringify(value)
+    }
+}
+
 export class Response implements DenoResponse {
     status?: number;
     headers?: Headers;
     body?: Uint8Array | Deno.Reader | string;
+    type: string;
     trailers?: () => Promise<Headers> | Headers;
 
-    constructor(body='', status=200, headers?: Headers){
+    constructor(body: any = '', status=200, headers?: Headers){
+        this.type = typeof body;
         this.body = body;
         this.status = status;
         this.headers = headers;
+        this.parseBody()
     }
+
+    parseBody(){
+        if(parses[this.type]){
+            const parser = parses[this.type];
+            this.body = parser(this.body)
+        }else{
+            this.body = parses.default(this.body)
+        }
+        return this.body;
+    }
+
 }
 
 export default class Server {
@@ -77,13 +102,17 @@ export default class Server {
     }
 
     private async handleRequest(request: ServerRequest) {
-        const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest)
-        const response = await this.iterateMiddlewares(toRouter, request);
-        request.respond(response);
-        return request.finalize()
+        try {
+            const toRouter = (routerRequest: ServerRequest) => this._router.handleRequest(routerRequest)
+            const response = await this.iterateMiddlewares(toRouter, request);
+            request.respond(response);
+            return request.finalize()
+        }catch(error){
+            request.respond(new Response(error.message, 500))
+        }
     }
 
-    public async listen() {
+    private async startServer(){
         try{
             for await (const request of this._server) {
                 this.handleRequest(request);
@@ -91,6 +120,13 @@ export default class Server {
         }catch(error){
             return error;
         }
+    }
+
+    public async listen() {
+        this.startServer()
+            .catch((error) => {
+                if(error) this.startServer()
+            })
     }
 
     public stop(){
@@ -103,6 +139,6 @@ export default class Server {
 
 }
 
-export const serverFactory = (config: ServerConfig) => {
+export function serverFactory(config: ServerConfig){
     return new Server(config);
 }
