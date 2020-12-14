@@ -111,11 +111,15 @@ export default class Server {
     private async handleRequest(request: ServerRequest) {
         try {
             const response = await this._responder(request);
-            console.log(`%c[REQUEST]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`, 'color:#00F507', 'color:default')
             request.respond(response);
-            return request.finalize()
+            request.finalize()
+            console.log(`%c[REQUEST]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`,
+                response.status === 200 ? 'color:#00F507' : 'color:red', 'color:default'
+            )
         }catch(error){
-            request.respond(new Response(error.message, 500))
+            const response = new Response(error.message, 500);
+            request.respond(response);
+            console.log(`%c[ERROR]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`, 'color:red', 'color:default')
         }
     }
     
