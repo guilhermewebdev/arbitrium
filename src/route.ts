@@ -1,9 +1,23 @@
 import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
 import { RequestListener, Response } from './server.ts';
 
+type type = {
+    parser: any,
+    pattern: string
+}
 class TYPES {
-    number = Number;
-    str = String;
+    number: type = {
+        parser: Number,
+        pattern: '[0-9]'
+    };
+    str: type = {
+        parser: String,
+        pattern: '[^/]+',
+    };
+    uuid: type = {
+        parser: String,
+        pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    }
 }
 
 const types = new TYPES()
@@ -16,9 +30,10 @@ export interface RouteInterface {
 export class Path {
     public readonly hasProp: boolean;
     public readonly path: string;
-    public readonly _type?: keyof TYPES;
+    public readonly _type?: type;
     public readonly variable?: string;
-    URL_REGEX = /^\<([A-z]{1,})\:(number|str)\>$/g
+    public readonly URL_REGEX = /\<([A-z]{1,})\:(number|str)\>/;
+    public readonly pattern;
 
     constructor(path: string) {
         this.hasProp =  this.URL_REGEX.test(path);
@@ -26,32 +41,37 @@ export class Path {
         if (this.hasProp) {
             this.variable = this.getVariable(path);
             this._type = this.getType(path);
+            this.pattern = new RegExp(this.path.replace(this.URL_REGEX, this._type.pattern))
+        } else {
+            this.pattern = new RegExp(this.path)
         }
     }
 
     get type(){
-        if (this._type) return types[this._type];
+        if (this._type) return this._type.parser;
         return (value: any) => value; 
     }
 
+    toString = () => this.path;
+
     private getVariable(path: string): string {
-        return path.split(':')[0].slice(1);
+        const variable = this.URL_REGEX.exec(path)
+        if(!!variable) return variable[1];
+        throw new Error('Invalid URL type')
     }
 
-    private getType(path: string): keyof TYPES | undefined {
-        const type = path.split(':')[1].slice(0, -1);
+    private getType(path: string): type {
+        const parts = this.URL_REGEX.exec(path)
         // @ts-ignore
-        if(type in types) return type;
+        if(!!parts) return types[parts[2]];
+        throw new Error('Invalid URL type')
     }
 
     public check(path: string): boolean {
-        const typeMatch = (this.hasProp && !!this.type(path));
-        return typeMatch || path === this.path;
+        return this.pattern.test(path);
     }
 
-    public getValue(path: string) {
-        return this.type(path);
-    }
+    public getValue = (path: string) => this.type(path)
 }
 
 export default class Route implements RouteInterface {
@@ -59,7 +79,7 @@ export default class Route implements RouteInterface {
     private _view: RequestListener;
 
     constructor(path: string, view: RequestListener) {
-        this._path = Route.pathToArray(path).map(item => new Path(item));;
+        this._path = Route.pathToArray(path).map(item => new Path(item));
         this._view = view;
     }
 

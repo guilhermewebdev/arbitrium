@@ -6,7 +6,7 @@ export interface RequestListener {
 }
 
 export interface Middleware {
-    (getResponse: RequestListener | undefined): RequestListener;
+    (getResponse: RequestListener): RequestListener;
 }
 
 export interface ServerConfig {
