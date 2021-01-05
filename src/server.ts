@@ -6,7 +6,7 @@ export interface RequestListener {
 }
 
 export interface Middleware {
-    (getResponse: RequestListener): RequestListener;
+    (getResponse: RequestListener | undefined): RequestListener;
 }
 
 export interface ServerConfig {
@@ -17,6 +17,7 @@ export interface ServerConfig {
     useHttps?: boolean;
     cert?: string;
     key?: string;
+    application?: ApplicationInterface;
 }
 
 const parses: any = {
@@ -28,6 +29,12 @@ const parses: any = {
     default: function (value: any) {
         return String(value)
     }
+}
+
+async function log(type: string, request?: ServerRequest, response?: Response) {
+    console.log(`%c[${type}]%c[${new Date()}]: ${response?.status} ${request?.method} ${request?.url} - ${request?.headers.get('User-Agent')}`,
+        response?.status === 200 ? 'color:#00F507' : 'color:red', 'color:default'
+    )
 }
 
 export class Response implements DenoResponse {
@@ -57,31 +64,83 @@ export class Response implements DenoResponse {
 
 }
 
+export interface ApplicationInterface {
+    router?: Router;
+    responder: RequestListener;
+    handler: (request: ServerRequest) => Promise<void>
+}
+
+export interface ApplicationSettings {
+    middlewares?: Middleware[];
+    router: Router;
+}
+
+export class Application implements ApplicationInterface {
+    private _responder: RequestListener;
+    readonly middlewares: Middleware[];
+    readonly router: Router;
+
+    constructor(settings: ApplicationSettings){
+        const { middlewares=[], router } = settings;
+        this.middlewares = middlewares;
+        this.router = router;
+        this._responder = this.iterateMiddlewares()
+    }
+
+    get responder(){ return this._responder }
+
+    private iterateMiddlewares(): RequestListener {
+        return this.middlewares.reduce((previous, current) => {
+            return current(previous)
+        }, this.toRouter)
+    }
+
+    private toRouter = (request: ServerRequest) => {
+        return this.router.handleRequest(request)
+    }
+
+    public async handler(request: ServerRequest) {
+        try {
+            const response = await this.responder(request);
+            request.respond(response);
+            request.finalize()
+            log('REQUEST', request, response)
+        }catch(error){
+            const response = new Response(error.message, 500);
+            request.respond(response);
+            request.finalize();
+            log('ERROR', request, response)
+        }
+    }
+    
+    public addMiddleware(middleware: Middleware){
+        const index = this.middlewares.push(middleware);
+        this._responder = this.iterateMiddlewares();
+        return index;
+    }
+}
+
 export default class Server {
     private _useHttps: boolean;
     private _server: DenoServer;
     private _port: number;
     private _host: string;
-    private _router: Router;
-    private _middlewares: Middleware[];
     private _key?: string;
     private _cert?: string;
-    private _responder: RequestListener;
+    readonly application: ApplicationInterface;
 
     constructor(config: ServerConfig) {
-        const { router, port = 8080, host = 'localhost', useHttps = false, middlewares = [], key, cert } = config;
+        const { router, port = 8080, application, host = 'localhost', useHttps = false, middlewares = [], key, cert } = config;
         if(useHttps && !('key' in config && 'cert' in config)){
             throw new Error('[ERROR]: If you want use SSL, you should inform the certified and key path')
         }
-        this._router = router;
-        this._middlewares = middlewares;
         this._useHttps = useHttps;
         this._port = port;
         this._host = host;
         this._key = key;
         this._cert = cert;
         this._server = this.createServer();
-        this._responder = this.iterateMiddlewares();
+        this.application = !!application ? application : new Application({ middlewares, router });
     }
 
     get port() { return this._port; }
@@ -100,36 +159,10 @@ export default class Server {
         return this._useHttps ? serveTLS({ ...config, certFile: this._cert,  keyFile: this._key }) : serve(config);
     }
 
-    private toRouter = (request: ServerRequest) => {
-        return this._router.handleRequest(request)
-    }
-
-    private iterateMiddlewares(): RequestListener {
-        return this._middlewares.reduce((previous, current) => {
-            return current(previous)
-        }, this.toRouter)
-    }
-
-    public async handleRequest(request: ServerRequest) {
-        try {
-            const response = await this._responder(request);
-            request.respond(response);
-            request.finalize()
-            console.log(`%c[REQUEST]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`,
-                response.status === 200 ? 'color:#00F507' : 'color:red', 'color:default'
-            )
-        }catch(error){
-            const response = new Response(error.message, 500);
-            request.respond(response);
-            request.finalize();
-            console.log(`%c[ERROR]:%c ${response.status} ${request.method} ${request.url} - ${request.headers.get('User-Agent')}`, 'color:red', 'color:default')
-        }
-    }
-    
     private async startServer(tries=0){
         try{
             for await (const request of this._server) {
-                this.handleRequest(request);
+                this.application.handler(request);
             }
         }catch(error){
             if(tries < 5) this.startServer(tries + 1);
@@ -139,18 +172,12 @@ export default class Server {
 
     public async listen() {
         this.startServer()
-        console.log(`\n%c[SERVER RUNNING]:%c ${this.url}\n`, 'color:#00F507', 'color:default')
+        console.log(`\n%c[SERVER RUNNING]%c[${new Date()}]: ${this.url}\n`, 'color:#00F507', 'color:default')
     }
     
     public stop(){
         this.server.close()
-        console.log(`%c[SERVER STOPPED]`, 'color:red')
-    }
-
-    public addMiddleware(middleware: Middleware){
-        const index = this._middlewares.push(middleware);
-        this._responder = this.iterateMiddlewares();
-        return index;
+        console.log(`%c[SERVER STOPPED]%c[${new Date()}]`, 'color:red', 'color:default')
     }
 
 }

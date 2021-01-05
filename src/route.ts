@@ -1,8 +1,6 @@
 import { ServerRequest } from 'https://deno.land/std@0.80.0/http/server.ts';
 import { RequestListener, Response } from './server.ts';
 
-const URL_REGEX = /^\<([A-z]{1,})\:(number|str)\>$/g
-
 class TYPES {
     number = Number;
     str = String;
@@ -20,9 +18,10 @@ export class Path {
     public readonly path: string;
     public readonly _type?: keyof TYPES;
     public readonly variable?: string;
+    URL_REGEX = /^\<([A-z]{1,})\:(number|str)\>$/g
 
     constructor(path: string) {
-        this.hasProp =  /^\<([A-z]{1,})\:(number|str)\>$/g.test(path);
+        this.hasProp =  this.URL_REGEX.test(path);
         this.path = path;
         if (this.hasProp) {
             this.variable = this.getVariable(path);
