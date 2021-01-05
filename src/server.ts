@@ -26,7 +26,7 @@ const parses: any = {
         return JSON.stringify(json);
     },
     default: function (value: any) {
-        return JSON.stringify(value)
+        return String(value)
     }
 }
 
@@ -110,7 +110,7 @@ export default class Server {
         }, this.toRouter)
     }
 
-    private async handleRequest(request: ServerRequest) {
+    public async handleRequest(request: ServerRequest) {
         try {
             const response = await this._responder(request);
             request.respond(response);
@@ -133,7 +133,7 @@ export default class Server {
             }
         }catch(error){
             if(tries < 5) this.startServer(tries + 1);
-            return error;
+            throw error;
         }
     }
 

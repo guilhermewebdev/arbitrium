@@ -10,6 +10,11 @@ class TYPES {
 
 const types = new TYPES()
 
+export interface RouteInterface {
+    match: (path: string) => boolean;
+    handler: (request: ServerRequest) => Promise<Response>;
+}
+
 export class Path {
     public readonly hasProp: boolean;
     public readonly path: string;
@@ -50,7 +55,7 @@ export class Path {
     }
 }
 
-export default class Route {
+export default class Route implements RouteInterface {
     private _path: Path[];
     private _view: RequestListener;
 
@@ -92,7 +97,7 @@ export default class Route {
         return args;
     }
 
-    public run(request: ServerRequest) {
+    public handler(request: ServerRequest) {
         return this._view(request, this.getArgs(request.url))
     }
 
