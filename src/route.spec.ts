@@ -34,6 +34,27 @@ Deno.test('Number param', () => {
     assertEquals(user.getArgs('/45'), { user: 45 });
 })
 
+Deno.test('Hard test in Path', () => {
+    const path = new Path('user-<id:number>sell')
+    assertEquals(path.hasProp, true);
+    assertEquals(path.variable, 'id');
+    assertEquals(path.type, Number);
+    assertEquals(path.check('user-4sell'), true)
+})
+
+Deno.test('Mixed param', () => {
+    const path = '/user-<id:number>';
+    const route = new Route(path, view);
+    // @ts-ignore
+    const hasProp: boolean = route.path.reduce((previous, current) => previous.hasProp || current.hasProp)
+    assertEquals(hasProp, true)
+    assertEquals(Route.pathToArray(path), ['', 'user-<id:number>'])
+    assertEquals(Route.pathToArray('/user-4'), ['', 'user-4'])
+    assertEquals(route.path.length, 2, 'Path length ' + route.path)
+    assertEquals(route.match('/user-4'), true, '/user-4 don\' passed')
+    assertEquals(route.match('/user-t'), false, '/user-t don\'t passed')
+})
+
 Deno.test('Multiple params', () => {
     const resource = new Route('/<user:number>/<address:str>/', view);
     assertEquals(resource.path.length, 3, "Resource path length")
