@@ -23,7 +23,7 @@ email: guilherme@guilhermeweb.dev
 description: >- # this means to ignore newlines until "baseurl:"
   Arbitrium is a web micro-framework for Deno. It's designed to create a MVC controllers, making available an async web server and a router, to make get started a powerful applications.  
 baseurl: "" # the subpath of your site, e.g. /blog
-# url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://arbitrium-docs.vercel.app/" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: GuilhermeWebDev
 github_username:  guilhermewebdev
 source: ./docs
@@ -32,7 +32,8 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
   - octopress-minify-html
-  
+  - jekyll-feed
+
 # Build settings
 theme: minima
 robots: true
