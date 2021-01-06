@@ -3,11 +3,10 @@ Arbitrium is a web micro-framework for Deno. It's designed to create a MVC contr
   
 # A Simple Example  
 ```typescript
-import Server, { RequestListener } from '../src/server.ts';
-import Router from '../src/router.ts';
-import { route } from '../src/route.ts';
+import Server, { RequestListener, Response } from 'https://deno.land/x/arbitrium@v0.1.0-alpha.2/src/server.ts';
+import Router from 'https://deno.land/x/arbitrium@v0.1.0-alpha.2/src/router.ts';
+import { route } from 'https://deno.land/x/arbitrium@v0.1.0-alpha.2/src/route.ts';
 import { ServerRequest } from "https://deno.land/std@0.80.0/http/server.ts";
-import { Response } from '../src/server.ts';
 
 async function view(request: ServerRequest, args?: {}) {
     // Write views to process the request, and return a response
