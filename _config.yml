@@ -32,6 +32,7 @@ plugins:
   - jekyll-sitemap
   - jekyll-seo-tag
   - octopress-minify-html
+  
 # Build settings
 theme: minima
 robots: true
@@ -57,3 +58,6 @@ exclude:
   - vendor/ruby/
   - src/
   - example/
+
+sass:
+  style: compressed
