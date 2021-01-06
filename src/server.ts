@@ -176,8 +176,8 @@ export default class Server {
     }
 
     public async listen() {
+        console.log(`%c[SERVER RUNNING]%c: ON ${this.url} (Press CTRL+C to quit)\n`, 'color:#00F507', 'color:default')
         this.startServer()
-        console.log(`\n%c[SERVER RUNNING]%c[${new Date()}]: ${this.url}\n`, 'color:#00F507', 'color:default')
     }
     
     public stop(){
