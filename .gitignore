@@ -105,3 +105,8 @@ dist
 .vscode
 
 lib
+_site
+.sass-cache
+.jekyll-cache
+.jekyll-metadata
+vendor
