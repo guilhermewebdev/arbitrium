@@ -28,9 +28,14 @@ twitter_username: GuilhermeWebDev
 github_username:  guilhermewebdev
 source: ./docs
 
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - octopress-minify-html
 # Build settings
 theme: minima
-
+robots: true
+sitemap: true
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to
