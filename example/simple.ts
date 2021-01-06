@@ -11,7 +11,7 @@ async function view(request: ServerRequest, args?: {}) {
 
 async function viewWithParam(request: ServerRequest, args?: {}) {
     // You can get the url params from "args" variable
-    return new Response(args)
+    return new Response(args, 200, 'application/json')
 }
 
 function middleware(getResponse: RequestListener) {

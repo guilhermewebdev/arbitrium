@@ -43,12 +43,17 @@ export class Response implements DenoResponse {
     body?: Uint8Array | Deno.Reader | string;
     type: string;
     trailers?: () => Promise<Headers> | Headers;
+    charset: string;
 
-    constructor(body: any = '', status=200, headers?: Headers){
+    constructor(body: any = '', status=200, contentType?: string, headers?: Array<[string, string]>, charset?: string){
         this.type = typeof body;
         this.body = body;
-        this.status = status;
-        this.headers = headers;
+        this.charset = charset || 'UTF-8'
+        this.status = Number(status);
+        if(!(100 <= this.status && this.status <= 599)) throw new Error('HTTP status code must be an integer from 100 to 599.')
+        this.headers = new Headers(headers);
+        if(!contentType) contentType = `text/html; charset=${this.charset}`
+        this.headers.append('Content-Type', contentType)
         this.parseBody()
     }
 
