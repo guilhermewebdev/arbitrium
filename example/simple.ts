@@ -11,19 +11,20 @@ async function view(request: ServerRequest, args?: {}) {
 
 async function viewWithParam(request: ServerRequest, args?: {}) {
     // You can get the url params from "args" variable
-    return new Response(args)
+    return new Response(args, 200, 'application/json')
 }
 
 function middleware(getResponse: RequestListener) {
     // One-time configuration and initialization.
-    console.log('On start server')
+    console.log('On Start Application')
     return async function(request: ServerRequest) {
-        console.log('On request')
         // Code to be executed for each request before
         // the view (and later middleware) are called.
-        const response = getResponse(request);
+        console.log('On Request')
+        const response = await getResponse(request);
         // Code to be executed for each request/response after
         // the view is called.
+        console.log('On Response')
         return response;
     }
 }
@@ -38,6 +39,6 @@ const router = new Router([
 // To create a server, is just instance the "Server" class with configs
 const server = new Server({ router, middlewares: [middleware] });
 
-// To start server is just call the ".listen()" server method
+// To start server is just call the ".listen()" Server method
 server.listen()
 
